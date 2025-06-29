@@ -1,37 +1,26 @@
 // src/services/reserva.service.js
 const reservaRepository = require('../repositories/PostgresReservaRepository');
+const ReservaFactory = require('../factories/ReservaFactory'); // <-- Importamos a Factory
 
 class ReservaService {
     async criar(reservaData) {
-        const { sala_id, data_inicio, data_fim } = reservaData;
+        // Usa a Factory para criar e validar o objeto Reserva a partir dos dados brutos
+        const reserva = ReservaFactory.create(reservaData);
 
-        // 1. Validação básica de entrada
-        if (!sala_id || !data_inicio || !data_fim) {
-            throw new Error('Sala, data de início e data de fim são obrigatórios.');
-        }
+        // A partir daqui, trabalhamos com o objeto "reserva" limpo, e não com "reservaData"
+        const conflitos = await reservaRepository.encontrarConflitos(reserva.sala_id, reserva.data_inicio, reserva.data_fim);
 
-        // 2. Chama o repositório para buscar por reservas conflitantes
-        const conflitos = await reservaRepository.encontrarConflitos(sala_id, data_inicio, data_fim);
-
-        // 3. A Regra de Negócio Principal!
         if (conflitos.length > 0) {
-            // Se a lista de conflitos não estiver vazia, lança um erro.
             throw new Error('Horário indisponível. Já existe uma reserva neste período.');
         }
 
-        // 4. Se não houver conflitos, cria a reserva.
-        const novaReserva = await reservaRepository.criar(reservaData);
+        // Passamos o objeto limpo para o repositório
+        const novaReserva = await reservaRepository.criar(reserva);
         return novaReserva;
     }
 
     async listar(filtros) {
-        const { sala_id, data } = filtros;
-
-        if (!sala_id || !data) {
-            throw new Error('O ID da sala e a data são obrigatórios para a busca.');
-        }
-
-        return await reservaRepository.encontrarPorSalaEData(sala_id, data);
+        // ... (código existente) ...
     }
 }
 
