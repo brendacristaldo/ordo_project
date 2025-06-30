@@ -1,26 +1,32 @@
-// src/services/reserva.service.js
 const reservaRepository = require('../repositories/PostgresReservaRepository');
-const ReservaFactory = require('../factories/ReservaFactory'); // <-- Importamos a Factory
+const ReservaFactory = require('../factories/ReservaFactory');
+const DefaultConflictStrategy = require('../strategies/DefaultConflictStrategy'); // <-- Importamos a Estratégia
 
 class ReservaService {
+    constructor() {
+        // O serviço agora tem uma estratégia de verificação de conflitos.
+        this.conflictCheckStrategy = new DefaultConflictStrategy();
+    }
+
     async criar(reservaData) {
-        // Usa a Factory para criar e validar o objeto Reserva a partir dos dados brutos
         const reserva = ReservaFactory.create(reservaData);
 
-        // A partir daqui, trabalhamos com o objeto "reserva" limpo, e não com "reservaData"
-        const conflitos = await reservaRepository.encontrarConflitos(reserva.sala_id, reserva.data_inicio, reserva.data_fim);
+        // 1. O serviço DELEGA a verificação de conflitos para o objeto de estratégia.
+        await this.conflictCheckStrategy.check(reserva, reservaRepository);
 
-        if (conflitos.length > 0) {
-            throw new Error('Horário indisponível. Já existe uma reserva neste período.');
-        }
-
-        // Passamos o objeto limpo para o repositório
+        // 2. Se a estratégia não lançou um erro, o serviço continua seu trabalho.
         const novaReserva = await reservaRepository.criar(reserva);
         return novaReserva;
     }
 
     async listar(filtros) {
-        // ... (código existente) ...
+        const { sala_id, data } = filtros;
+
+        if (!sala_id || !data) {
+            throw new Error('O ID da sala e a data são obrigatórios para a busca.');
+        }
+
+        return await reservaRepository.encontrarPorSalaEData(sala_id, data);
     }
 }
 
