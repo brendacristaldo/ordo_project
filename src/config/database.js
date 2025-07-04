@@ -1,41 +1,31 @@
-// src/config/database.js
-
+// aqui eu centralizo a conexão com o banco de dados
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-// A classe que vai gerenciar nossa conexão
 class Database {
+    static #instance; // o # torna o campo privado
+
+    // o construtor agora é privado para forçar o uso do getInstance()
     constructor() {
-        // O construtor é o local ideal para a lógica que só deve rodar uma vez.
-        if (!Database.instance) {
-            console.log('Criando uma nova instância do pool de conexões com o PostgreSQL...');
-            this.pool = new Pool({
+        throw new Error("use Database.getInstance() para obter a instância.");
+    }
+
+    // aqui o método que garante que teremos apenas uma instância do pool
+    static getInstance() {
+        if (!this.#instance) {
+            console.log("criando a única instância do pool de conexões com o PostgreSQL...");
+            this.#instance = new Pool({
                 host: process.env.DB_HOST,
                 port: process.env.DB_PORT || 5432,
                 user: process.env.DB_USER,
                 password: process.env.DB_PASSWORD,
                 database: process.env.DB_NAME,
             });
-            Database.instance = this;
         }
-
-        // Se uma instância já existe, o construtor retorna a instância existente.
-        return Database.instance;
-    }
-
-    // Método para acessar o pool de conexões
-    getPool() {
-        return this.pool;
+        return this.#instance;
     }
 }
 
-// Criamos a instância UMA VEZ...
-const instance = new Database();
-
-// ...e congelamos o objeto para garantir que ele não seja modificado em outros lugares.
-Object.freeze(instance);
-
-// Exportamos o método para obter o pool, garantindo que seja sempre o mesmo.
-module.exports = instance.getPool();
+module.exports = Database;

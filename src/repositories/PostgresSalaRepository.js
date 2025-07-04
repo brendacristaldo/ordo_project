@@ -1,16 +1,14 @@
-// Arquivo: src/repositories/PostgresSalaRepository.js
-
-const db = require('../config/database');
+// aqui eu falo diretamente com a tabela de salas no banco de dados
+const db = require('../config/database').getInstance();
 
 class PostgresSalaRepository {
-    // --- MÉTODO USADO PELA ROTA GET QUE ESTÁ TRAVANDO ---
-    // Verifique se este método está exatamente assim, especialmente a linha do "return".
+    // busca todas as salas que existem
     async encontrarTodas() {
         const resultado = await db.query('SELECT * FROM salas ORDER BY id');
-        return resultado.rows; // Se esta linha faltar, a requisição ficará "pendurada" para sempre!
+        return resultado.rows;
     }
 
-    // --- MÉTODO USADO PELA ROTA POST QUE FUNCIONOU NO INSOMNIA ---
+    // aqui cria uma nova sala no banco
     async criar(sala) {
         const { nome, descricao, capacidade } = sala;
         const sql = 'INSERT INTO salas (nome, descricao, capacidade) VALUES ($1, $2, $3) RETURNING *';
