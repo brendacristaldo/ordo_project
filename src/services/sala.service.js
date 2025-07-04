@@ -5,7 +5,6 @@ class SalaService {
         return await salaRepository.encontrarTodas();
     }
 
-    // --- ADICIONE ESTE NOVO MÉTODO ---
     async criar(salaData) {
         // Aqui poderiam entrar regras de negócio, como "não permitir salas com o mesmo nome".
         // Por enquanto, vamos apenas chamar o repositório.

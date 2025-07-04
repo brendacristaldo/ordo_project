@@ -1,5 +1,4 @@
 // Arquivo: src/repositories/PostgresSalaRepository.js
-// VERIFIQUE SE O SEU ARQUIVO ESTÁ EXATAMENTE ASSIM:
 
 const db = require('../config/database');
 
